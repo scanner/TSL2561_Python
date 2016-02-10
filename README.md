@@ -18,4 +18,8 @@ Simple usage:
 
 >>> from TSL2561.TSL2561 import TSL2561
 >>> tsl = TSL2561()
->>> 
+>>> broadband, ir = tsl.get_raw_data()
+>>> print "Raw values - broadband: {}, IR: {}".format(broadband, ir)
+>>> broadband, ir = tsl.get_luminosity()
+>>> print "Luminosity (auto-gain): broadband: {}, IR: {}".format(broadband, ir)
+>>> print "Lux: {}".format(tsl.get_lux())

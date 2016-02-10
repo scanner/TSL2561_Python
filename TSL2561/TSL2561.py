@@ -25,6 +25,23 @@ from Adafruit_GPIO import I2C
 #
 class TSL2561(object):
     """
+    Read sensor values from the TLS2561 Luminosity sensor. Also
+    supports different integration times, gain, and auto-scaling as
+    well as conversion of data to lux values.
+
+    Cribbed from the Arduino Adafruit TSL2561 code:
+
+         https://github.com/adafruit/Adafruit_TSL2561
+
+    Simple usage:
+
+    >>> from TSL2561.TSL2561 import TSL2561
+    >>> tsl = TSL2561()
+    >>> broadband, ir = tsl.get_raw_data()
+    >>> print "Raw values - broadband: {}, IR: {}".format(broadband, ir)
+    >>> broadband, ir = tsl.get_luminosity()
+    >>> print "Luminosity (auto-gain): broadband: {}, IR: {}".format(broadband, ir)
+    >>> print "Lux: {}".format(tsl.get_lux())
     """
     VISIBLE = 2       # channel 0 - channel 1
     INFRARED = 1      # channel 1
@@ -223,9 +240,9 @@ class TSL2561(object):
             raise ValueError("{} not a valid integration time ({})".format(
                 integ_time, self.VALID_INTEG_TIMES))
         self.enable()
-        self.integ_time = integ_time
         self._device.write8(self.COMMAND_BIT | self.REG_TIMING,
                             self.integ_time | self.gain)
+        self.integ_time = integ_time
         self.disable()
 
     ##################################################################
@@ -257,7 +274,6 @@ class TSL2561(object):
         self.enable()
         id = self._device.readU8(self.COMMAND_BIT | self.REG_ID)
         self.disable()
-        print "id is: {}, binary: {}".format(id, bin(id))
         return ((id & 0xf0) >> 4, (id & 0x0f))
 
     ####################################################################
@@ -422,18 +438,15 @@ class TSL2561(object):
                 lo = self.AGC_TLO_402MS
 
             broadband, ir = self.get_raw_data()
-
             # Run an auto-gain check if we haven't already done so ...
             #
-            if not auto_gain_check:
+            if auto_gain_check is False:
                 if broadband < lo and self.gain == self.GAIN_1X:
                     # Increase the gain and try again
                     #
                     self.set_gain(self.GAIN_16X)
-
                     # Re-read the conversion results.
                     broadband, ir = self.get_raw_data()
-
                     # Set a flag to indicate we've adjusted the gain
                     #
                     auto_gain_check = True
@@ -472,6 +485,7 @@ class TSL2561(object):
         """
         Returns the raw data from channel0 and channel1 of the sensor.
         """
+        self.enable()
         # Wait x ms for ADC to complete
         #
         if self.integ_time == self.INTEG_TIME_13MS:

@@ -20,13 +20,16 @@ from TSL2561.TSL2561 import TSL2561
 #############################################################################
 #
 def main():
-    tsl = TSL2561()
+    tsl = TSL2561(gain=TSL2561.GAIN_16X)
+    print "TSL id: {}, {}".format(*tsl.get_id())
 
     while True:
         print "{}".format(datetime.now())
-        print "TSL id: {}, {}".format(*tsl.get_id())
-        print "Raw values - broadband: {}, IR: {}".format(*tsl.get_raw_data())
-        print "Luminosity (auto-gain): broadband: {}, IR: {}".format(*tsl.get_luminosity())
+        broadband, ir = tsl.get_raw_data()
+        print "Raw values - broadband: {}, IR: {}".format(broadband, ir)
+        broadband, ir = tsl.get_luminosity()
+        print "Luminosity (auto-gain): broadband: {}, IR: {}".format(broadband,
+                                                                     ir)
         print "Lux: {}".format(tsl.get_lux())
         print ""
         time.sleep(5)
